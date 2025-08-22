@@ -162,4 +162,3 @@ export const javaQuestions: Question[] = [
     correctAnswer: 2
   }
 ];
-  

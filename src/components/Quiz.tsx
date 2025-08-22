@@ -1,12 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { QuizAnswer, User } from '../types/quiz';
+import { QuizAnswer, User, QuizAttempt } from '../types/quiz';
 import { javaQuestions } from '../data/questions';
 import { QuestionSidebar } from './QuestionSidebar';
-import { ChevronLeft, ChevronRight, Check, LogOut } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Check, LogOut, Clock, AlertTriangle } from 'lucide-react';
+import { 
+  saveQuizAttemptToStorage, 
+  generateId, 
+  saveSessionToStorage,
+  removeSessionFromStorage,
+  deactivateSession
+} from '../utils/storage';
 
 interface QuizProps {
   user: User;
-  onQuizComplete: (answers: QuizAnswer[]) => void;
+  onQuizComplete: (answers: QuizAnswer[], timeTaken: number) => void;
   onLogout: () => void;
 }
 
@@ -14,21 +21,140 @@ export const Quiz: React.FC<QuizProps> = ({ user, onQuizComplete, onLogout }) =>
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<QuizAnswer[]>([]);
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
+  const [quizAttempt, setQuizAttempt] = useState<QuizAttempt | null>(null);
+  const [timeRemaining, setTimeRemaining] = useState<number | null>(null);
+  const [showTimeWarning, setShowTimeWarning] = useState(false);
 
   const currentQuestion = javaQuestions[currentQuestionIndex];
   const totalQuestions = javaQuestions.length;
   const currentQuestionNumber = currentQuestionIndex + 1;
+  const QUIZ_TIME_LIMIT = 30 * 60 * 1000; // 30 minutes in milliseconds
+
+  useEffect(() => {
+    // Initialize quiz attempt and user session
+    const attemptId = generateId();
+    const newAttempt: QuizAttempt = {
+      id: attemptId,
+      userId: user.id,
+      startTime: Date.now(),
+      answers: [],
+      totalQuestions,
+      isCompleted: false,
+      timeLimit: QUIZ_TIME_LIMIT
+    };
+
+    setQuizAttempt(newAttempt);
+    setTimeRemaining(QUIZ_TIME_LIMIT);
+    saveQuizAttemptToStorage(newAttempt);
+
+    // Update user session
+    saveSessionToStorage({
+      userId: user.id,
+      loginTime: Date.now(),
+      isActive: true,
+      currentQuizId: attemptId
+    });
+
+    return () => {
+      if (newAttempt && !newAttempt.isCompleted) {
+        // Update attempt as abandoned
+        const updatedAttempt = { ...newAttempt, endTime: Date.now() };
+        saveQuizAttemptToStorage(updatedAttempt);
+      }
+    };
+  }, [user.id, totalQuestions]);
+
+  useEffect(() => {
+    if (timeRemaining === null) return;
+
+    const timer = setInterval(() => {
+      setTimeRemaining(prev => {
+        if (prev === null) return null;
+        const newTime = prev - 1000;
+        
+        if (newTime <= 5 * 60 * 1000 && !showTimeWarning) { // 5 minutes warning
+          setShowTimeWarning(true);
+        }
+        
+        if (newTime <= 0) {
+          handleTimeUp();
+          return 0;
+        }
+        
+        return newTime;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [timeRemaining, showTimeWarning]);
 
   useEffect(() => {
     const existingAnswer = answers.find(a => a.questionId === currentQuestion.id);
     setSelectedOption(existingAnswer?.selectedOption ?? null);
   }, [currentQuestionIndex, answers, currentQuestion.id]);
 
+  const handleTimeUp = () => {
+    if (selectedOption !== null) {
+      saveAnswer(currentQuestion.id, selectedOption);
+    }
+    submitQuiz();
+  };
+
+  const formatTime = (milliseconds: number): string => {
+    const minutes = Math.floor(milliseconds / 60000);
+    const seconds = Math.floor((milliseconds % 60000) / 1000);
+    return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+  };
+
   const saveAnswer = (questionId: number, selectedOption: number) => {
+    const newAnswer = { 
+      questionId, 
+      selectedOption, 
+      answeredAt: Date.now() 
+    };
+    
     setAnswers(prev => {
       const filtered = prev.filter(a => a.questionId !== questionId);
-      return [...filtered, { questionId, selectedOption }];
+      return [...filtered, newAnswer];
     });
+  };
+
+  const submitQuiz = () => {
+    if (!quizAttempt) return;
+
+    const finalAnswers = [...answers];
+    if (selectedOption !== null) {
+      const currentAnswer = { 
+        questionId: currentQuestion.id, 
+        selectedOption, 
+        answeredAt: Date.now() 
+      };
+      const filtered = finalAnswers.filter(a => a.questionId !== currentQuestion.id);
+      finalAnswers.push(...filtered, currentAnswer);
+    }
+
+    const answersWithCorrection = finalAnswers.map(answer => ({
+      ...answer,
+      isCorrect: javaQuestions.find(q => q.id === answer.questionId)?.correctAnswer === answer.selectedOption
+    }));
+
+    const score = Math.round((answersWithCorrection.filter(a => a.isCorrect).length / totalQuestions) * 100);
+    const timeTaken = Date.now() - quizAttempt.startTime;
+
+    const completedAttempt: QuizAttempt = {
+      ...quizAttempt,
+      answers: answersWithCorrection,
+      score,
+      endTime: Date.now(),
+      isCompleted: true
+    };
+
+    saveQuizAttemptToStorage(completedAttempt);
+    
+    // Clean up user session
+    deactivateSession(user.id);
+
+    onQuizComplete(answersWithCorrection, timeTaken);
   };
 
   const handleConfirmAndNext = () => {
@@ -59,16 +185,18 @@ export const Quiz: React.FC<QuizProps> = ({ user, onQuizComplete, onLogout }) =>
   };
 
   const handleFinalSubmit = () => {
-    if (selectedOption !== null) {
-      saveAnswer(currentQuestion.id, selectedOption);
+    submitQuiz();
+  };
+
+  const handleLogout = () => {
+    if (confirm('Are you sure you want to logout? Your progress will be lost.')) {
+      if (quizAttempt) {
+        const abandonedAttempt = { ...quizAttempt, endTime: Date.now() };
+        saveQuizAttemptToStorage(abandonedAttempt);
+      }
+      removeSessionFromStorage(user.id);
+      onLogout();
     }
-
-    const finalAnswers = answers.map(answer => ({
-      ...answer,
-      isCorrect: javaQuestions.find(q => q.id === answer.questionId)?.correctAnswer === answer.selectedOption
-    }));
-
-    onQuizComplete(finalAnswers);
   };
 
   const allQuestionsAnswered = answers.length === totalQuestions &&
@@ -76,6 +204,10 @@ export const Quiz: React.FC<QuizProps> = ({ user, onQuizComplete, onLogout }) =>
 
   const canSubmitFinal = allQuestionsAnswered ||
     (answers.length === totalQuestions - 1 && selectedOption !== null);
+
+  if (!quizAttempt) {
+    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-2 md:p-4">
@@ -87,14 +219,44 @@ export const Quiz: React.FC<QuizProps> = ({ user, onQuizComplete, onLogout }) =>
             <p className="text-gray-600 text-sm md:text-base">Welcome, <span className="font-medium">{user.username}</span></p>
             <p className="text-xs md:text-sm text-gray-500">Question {currentQuestionNumber} of {totalQuestions}</p>
           </div>
-          <button
-            onClick={onLogout}
-            className="flex items-center px-3 md:px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm md:text-base"
-          >
-            <LogOut className="w-4 h-4 mr-2" />
-            Logout
-          </button>
+          
+          <div className="flex items-center gap-4">
+            {/* Timer */}
+            {timeRemaining !== null && (
+              <div className={`flex items-center px-3 py-2 rounded-lg ${
+                showTimeWarning ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'
+              }`}>
+                <Clock className="w-4 h-4 mr-2" />
+                <span className="font-mono text-sm font-medium">
+                  {formatTime(timeRemaining)}
+                </span>
+              </div>
+            )}
+            
+            <button
+              onClick={handleLogout}
+              className="flex items-center px-3 md:px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm md:text-base"
+            >
+              <LogOut className="w-4 h-4 mr-2" />
+              Logout
+            </button>
+          </div>
         </div>
+
+        {/* Time Warning */}
+        {showTimeWarning && timeRemaining && timeRemaining > 0 && (
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+            <div className="flex items-center">
+              <AlertTriangle className="w-5 h-5 text-yellow-600 mr-3" />
+              <div>
+                <h4 className="text-sm font-medium text-yellow-800">Time Warning</h4>
+                <p className="text-sm text-yellow-700">
+                  Less than 5 minutes remaining! Complete your quiz soon.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Progress Bar */}
         <div className="mt-2 md:mt-4 bg-gray-200 rounded-full h-2">
@@ -106,9 +268,8 @@ export const Quiz: React.FC<QuizProps> = ({ user, onQuizComplete, onLogout }) =>
 
         {/* Main Grid Layout */}
         <div className="grid grid-cols-1 md:grid-cols-5 gap-3 md:gap-6 mt-4 md:mt-6">
-          {/* Sidebar with space between buttons */}
+          {/* Sidebar */}
           <div className="md:col-span-2 lg:col-span-1 flex justify-center">
-            {/* Add wrapper for spacing if needed */}
             <QuestionSidebar
               totalQuestions={totalQuestions}
               currentQuestion={currentQuestionNumber}
@@ -203,12 +364,11 @@ export const Quiz: React.FC<QuizProps> = ({ user, onQuizComplete, onLogout }) =>
                       className="flex items-center px-7 md:px-8 py-2 md:py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium text-sm md:text-base"
                     >
                       <Check className="w-5 h-5 mr-2" />
-                      Final Complete
+                      Complete Quiz
                     </button>
                   )}
                 </div>
               </div>
-
             </div>
           </div>
         </div>
