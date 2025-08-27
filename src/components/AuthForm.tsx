@@ -170,7 +170,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({ onLogin }) => {
         <div className="text-center mb-8">
           <div className="bg-blue-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4 overflow-hidden">
             <img 
-              src="/public/logo.PNG" 
+              src="/logo.png" 
               alt="Logo" 
               className="w-full h-full object-contain" 
             />

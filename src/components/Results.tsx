@@ -79,7 +79,7 @@ export const Results: React.FC<ResultsProps> = ({ user, answers, timeTaken, onRe
     <div className="bg-white rounded-2xl shadow-xl p-8 mb-6 text-center">
       <div className="bg-blue-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4 overflow-hidden">
         <img
-          src="/public/logo.PNG"
+          src="/logo.png"
           alt="Quiz Logo"
           className="w-full h-full object-contain"
         />

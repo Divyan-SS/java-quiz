@@ -232,7 +232,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ admin, onLogout }) => {
             <div className="flex items-center">
           <div className="w-11 h-11 mr-3 rounded-full overflow-hidden">
             <img
-              src="/public/logo.PNG"
+              src="/logo.png"
               alt="Excel & Power BI Quiz Logo"
               className="w-full h-full object-contain"
             />

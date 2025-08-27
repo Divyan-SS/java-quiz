@@ -219,7 +219,7 @@ export const Quiz: React.FC<QuizProps> = ({ user, onQuizComplete, onLogout }) =>
         {/* Logo */}
         <div className="w-12 h-12 rounded-full overflow-hidden">
           <img
-            src="/public/logo.PNG"
+            src="/logo.png"
             alt="Quiz Logo"
             className="w-full h-full object-contain"
           />
