@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { QuizAnswer, User, QuizAttempt } from '../types/quiz';
-import { javaQuestions } from '../data/questions';
+import { excelQuestions } from '../data/questions'; // Updated to Excel questions
 import { QuestionSidebar } from './QuestionSidebar';
 import { ChevronLeft, ChevronRight, Check, LogOut, Clock, AlertTriangle } from 'lucide-react';
 import { 
@@ -25,8 +25,8 @@ export const Quiz: React.FC<QuizProps> = ({ user, onQuizComplete, onLogout }) =>
   const [timeRemaining, setTimeRemaining] = useState<number | null>(null);
   const [showTimeWarning, setShowTimeWarning] = useState(false);
 
-  const currentQuestion = javaQuestions[currentQuestionIndex];
-  const totalQuestions = javaQuestions.length;
+  const currentQuestion = excelQuestions[currentQuestionIndex]; // Updated
+  const totalQuestions = excelQuestions.length; // Updated
   const currentQuestionNumber = currentQuestionIndex + 1;
   const QUIZ_TIME_LIMIT = 30 * 60 * 1000; // 30 minutes in milliseconds
 
@@ -135,7 +135,7 @@ export const Quiz: React.FC<QuizProps> = ({ user, onQuizComplete, onLogout }) =>
 
     const answersWithCorrection = finalAnswers.map(answer => ({
       ...answer,
-      isCorrect: javaQuestions.find(q => q.id === answer.questionId)?.correctAnswer === answer.selectedOption
+      isCorrect: excelQuestions.find(q => q.id === answer.questionId)?.correctAnswer === answer.selectedOption // Updated
     }));
 
     const score = Math.round((answersWithCorrection.filter(a => a.isCorrect).length / totalQuestions) * 100);
@@ -210,39 +210,54 @@ export const Quiz: React.FC<QuizProps> = ({ user, onQuizComplete, onLogout }) =>
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-2 md:p-4">
-      <div className="max-w-7xl mx-auto">
-        {/* Quiz Header */}
-        <div className="bg-white rounded-2xl shadow-xl px-4 py-4 md:px-6 md:py-6 mb-2 md:mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-2">
-          <div>
-            <h1 className="text-lg md:text-2xl font-bold text-gray-800">Java Knowledge Quiz</h1>
-            <p className="text-gray-600 text-sm md:text-base">Welcome, <span className="font-medium">{user.username}</span></p>
-            <p className="text-xs md:text-sm text-gray-500">Question {currentQuestionNumber} of {totalQuestions}</p>
-          </div>
-          
-          <div className="flex items-center gap-4">
-            {/* Timer */}
-            {timeRemaining !== null && (
-              <div className={`flex items-center px-3 py-2 rounded-lg ${
-                showTimeWarning ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'
-              }`}>
-                <Clock className="w-4 h-4 mr-2" />
-                <span className="font-mono text-sm font-medium">
-                  {formatTime(timeRemaining)}
-                </span>
-              </div>
-            )}
-            
-            <button
-              onClick={handleLogout}
-              className="flex items-center px-3 md:px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm md:text-base"
-            >
-              <LogOut className="w-4 h-4 mr-2" />
-              Logout
-            </button>
-          </div>
+   <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-2 md:p-4">
+  <div className="max-w-7xl mx-auto">
+    {/* Quiz Header */}
+    <div className="bg-white rounded-2xl shadow-xl px-4 py-4 md:px-6 md:py-6 mb-2 md:mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-2">
+      
+      <div className="flex items-center gap-4">
+        {/* Logo */}
+        <div className="w-12 h-12 rounded-full overflow-hidden">
+          <img
+            src="/public/logo.PNG"
+            alt="Quiz Logo"
+            className="w-full h-full object-contain"
+          />
         </div>
 
+        <div>
+          <h1 className="text-lg md:text-2xl font-bold text-gray-800">Excel & Power BI Quiz</h1>
+          <p className="text-gray-600 text-sm md:text-base">
+            Welcome, <span className="font-medium">{user.username}</span>
+          </p>
+          <p className="text-xs md:text-sm text-gray-500">
+            Question {currentQuestionNumber} of {totalQuestions}
+          </p>
+        </div>
+      </div>
+      
+      <div className="flex items-center gap-4">
+        {/* Timer */}
+        {timeRemaining !== null && (
+          <div className={`flex items-center px-3 py-2 rounded-lg ${
+            showTimeWarning ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'
+          }`}>
+            <Clock className="w-4 h-4 mr-2" />
+            <span className="font-mono text-sm font-medium">
+              {formatTime(timeRemaining)}
+            </span>
+          </div>
+        )}
+        
+        <button
+          onClick={handleLogout}
+          className="flex items-center px-3 md:px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm md:text-base"
+        >
+          <LogOut className="w-4 h-4 mr-2" />
+          Logout
+        </button>
+      </div>
+    </div>
         {/* Time Warning */}
         {showTimeWarning && timeRemaining && timeRemaining > 0 && (
           <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">

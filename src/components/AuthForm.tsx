@@ -168,19 +168,18 @@ export const AuthForm: React.FC<AuthFormProps> = ({ onLogin }) => {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md">
         <div className="text-center mb-8">
-          <div className="bg-blue-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-            {isLogin ? (
-              <LogIn className="w-8 h-8 text-blue-600" />
-            ) : (
-              <UserPlus className="w-8 h-8 text-blue-600" />
-            )}
+          <div className="bg-blue-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4 overflow-hidden">
+            <img 
+              src="/public/logo.PNG" 
+              alt="Logo" 
+              className="w-full h-full object-contain" 
+            />
           </div>
-          <h1 className="text-3xl font-bold text-gray-800">Java Quiz App</h1>
+          <h1 className="text-2xl font-bold text-gray-800">Excel & Power BI Fundamentals Quiz</h1>
           <p className="text-gray-600 mt-2">
             {isLogin ? 'Sign in to your account' : 'Create your account'}
           </p>
         </div>
-
         <form onSubmit={handleSubmit} className="space-y-6">
           {isLogin ? (
             <div>

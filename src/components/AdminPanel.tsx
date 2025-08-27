@@ -230,27 +230,25 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ admin, onLogout }) => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
-              <Shield className="w-8 h-8 text-purple-600 mr-3" />
+          <div className="w-11 h-11 mr-3 rounded-full overflow-hidden">
+            <img
+              src="/public/logo.PNG"
+              alt="Excel & Power BI Quiz Logo"
+              className="w-full h-full object-contain"
+            />
+          </div>          
               <div>
                 <h1 className="text-xl font-bold text-gray-900">Admin Dashboard</h1>
                 <p className="text-sm text-gray-500">Welcome, {admin.username}</p>
               </div>
             </div>
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-4">
               <button
                 onClick={loadData}
-                className="p-2 text-gray-500 hover:text-gray-700 rounded-lg hover:bg-gray-100 transition-colors"
+                className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 transition-colors"
                 title="Refresh Data"
               >
                 <RefreshCw className="w-5 h-5" />
-              </button>
-              <button
-                onClick={handleExportCSV}
-                className="flex items-center px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-                title="Export CSV"
-              >
-                <Download className="w-4 h-4 mr-2" />
-                Export CSV
               </button>
               <button
                 onClick={onLogout}
@@ -263,7 +261,6 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ admin, onLogout }) => {
           </div>
         </div>
       </div>
-
       {/* Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Tabs */}

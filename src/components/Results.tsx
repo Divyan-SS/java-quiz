@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { QuizAnswer, User, QuizAttempt } from '../types/quiz';
-import { javaQuestions } from '../data/questions';
+import { excelQuestions } from '../data/questions'; // Updated to Excel questions
 import { 
   Trophy, 
   RotateCcw, 
@@ -21,7 +21,7 @@ interface ResultsProps {
 }
 
 export const Results: React.FC<ResultsProps> = ({ user, answers, timeTaken, onRestart, onLogout }) => {
-  const totalQuestions = javaQuestions.length;
+  const totalQuestions = excelQuestions.length; // Updated
   const correctAnswers = answers.filter(answer => answer.isCorrect).length;
   const incorrectAnswers = totalQuestions - correctAnswers;
   const rawScore = (correctAnswers / totalQuestions) * 100;
@@ -36,7 +36,7 @@ export const Results: React.FC<ResultsProps> = ({ user, answers, timeTaken, onRe
       endTime: Date.now(),
       answers,
       score,
-      totalQuestions: javaQuestions.length,
+      totalQuestions: excelQuestions.length, // Updated
       isCompleted: true
     };
     saveQuizAttemptToStorage(attempt);
@@ -55,9 +55,9 @@ export const Results: React.FC<ResultsProps> = ({ user, answers, timeTaken, onRe
   };
 
   const getScoreMessage = (score: number) => {
-    if (score >= 90) return 'Outstanding! Excellent Java knowledge!';
-    if (score >= 80) return 'Great job! Strong Java understanding!';
-    if (score >= 70) return 'Good work! Solid Java foundation!';
+    if (score >= 90) return 'Outstanding! Excellent Excel & Power BI knowledge!';
+    if (score >= 80) return 'Great job! Strong Excel & Power BI understanding!';
+    if (score >= 70) return 'Good work! Solid foundation!';
     if (score >= 60) return 'Nice effort! Keep practicing!';
     return 'Keep studying! You\'ll improve!';
   };
@@ -73,18 +73,22 @@ export const Results: React.FC<ResultsProps> = ({ user, answers, timeTaken, onRe
   const gradeInfo = getGradeLevel(score);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
-      <div className="max-w-4xl mx-auto">
-        {/* Header */}
-        <div className="bg-white rounded-2xl shadow-xl p-8 mb-6 text-center">
-          <div className="bg-blue-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Trophy className="w-10 h-10 text-blue-600" />
-          </div>
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">Quiz Complete!</h1>
-          <p className="text-gray-600">
-            Well done, <span className="font-semibold">{user.username}</span>!
-          </p>
-        </div>
+<div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
+  <div className="max-w-4xl mx-auto">
+    {/* Header */}
+    <div className="bg-white rounded-2xl shadow-xl p-8 mb-6 text-center">
+      <div className="bg-blue-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4 overflow-hidden">
+        <img
+          src="/public/logo.PNG"
+          alt="Quiz Logo"
+          className="w-full h-full object-contain"
+        />
+      </div>
+      <h1 className="text-3xl font-bold text-gray-800 mb-2">Quiz Complete!</h1>
+      <p className="text-gray-600">
+        Well done, <span className="font-semibold">{user.username}</span>!
+      </p>
+    </div>
 
         {/* Score Summary */}
         <div className="bg-white rounded-2xl shadow-xl p-8 mb-6">
@@ -156,7 +160,7 @@ export const Results: React.FC<ResultsProps> = ({ user, answers, timeTaken, onRe
         <div className="bg-white rounded-2xl shadow-xl p-8 mb-6">
           <h2 className="text-2xl font-bold text-gray-800 mb-6">Detailed Results</h2>
           <div className="space-y-6">
-            {javaQuestions.map((question, index) => {
+            {excelQuestions.map((question, index) => { // Updated
               const userAnswer = answers.find(a => a.questionId === question.id);
               const isCorrect = userAnswer?.isCorrect || false;
               const userSelectedOption = userAnswer?.selectedOption;
